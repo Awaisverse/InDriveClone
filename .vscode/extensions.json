@@ -1,0 +1,22 @@
+{
+  "recommendations": [
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "ms-vscode.vscode-typescript-next",
+    "bradlc.vscode-tailwindcss",
+    "formulahendry.auto-rename-tag",
+    "christian-kohler.path-intellisense",
+    "ms-vscode.vscode-json",
+    "eamodio.gitlens",
+    "usernamehw.errorlens",
+    "expo.vscode-expo-tools",
+    "ms-python.python",
+    "redhat.vscode-yaml",
+    "ms-vscode.vscode-json",
+    "ms-vscode.vscode-react-native",
+    "DiemasMichiels.emulate",
+    "auchenberg.vscode-browser-preview",
+    "formulahendry.code-runner"
+  ]
+}
+
