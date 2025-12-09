@@ -1,5 +1,11 @@
 // Driver-specific types
 
+export interface Location {
+  latitude: number;
+  longitude: number;
+  address?: string;
+}
+
 export interface Driver {
   id: string;
   name: string;
@@ -68,9 +74,4 @@ export interface ActiveRide {
   completedAt?: string;
 }
 
-export interface Location {
-  latitude: number;
-  longitude: number;
-  address?: string;
-}
 

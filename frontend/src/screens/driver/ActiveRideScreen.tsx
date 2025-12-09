@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '../../components';
-import { Ride } from '../../types';
+import { Ride, Location } from '../../types';
 
 interface ActiveRide extends Ride {
   passengerName: string;

@@ -71,3 +71,6 @@ UserSchema.methods.comparePassword = async function (
 
 export default mongoose.model<IUser>('User', UserSchema);
 
+
+
+

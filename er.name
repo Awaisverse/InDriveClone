@@ -1,0 +1,19 @@
+* c05ca7f | M Awais Akram <awaisverse@gmail.com> | 6 seconds ago | docs: add Git branches and commits summary
+*   f0d36c4 | M Awais Akram <awaisverse@gmail.com> | 47 seconds ago | merge: add contributing guidelines
+[32m|[m[33m\[m  
+[32m|[m * 692f496 | M Awais Akram <awaisverse@gmail.com> | 79 seconds ago | docs: add contributing guidelines
+* [33m|[m   db79586 | M Awais Akram <awaisverse@gmail.com> | 52 seconds ago | merge: integrate authentication state management
+[34m|[m[35m\[m [33m\[m  
+[34m|[m * [33m|[m 31da01e | M Awais Akram <awaisverse@gmail.com> | 2 minutes ago | feat(frontend): implement authentication state management
+[34m|[m [33m|[m[33m/[m  
+* [33m|[m   8c4d27b | M Awais Akram <awaisverse@gmail.com> | 59 seconds ago | merge: integrate frontend constants
+[36m|[m[1;31m\[m [33m\[m  
+[36m|[m * [33m|[m b9d6864 | M Awais Akram <awaisverse@gmail.com> | 2 minutes ago | feat(frontend): add app constants and configuration
+[36m|[m [33m|[m[33m/[m  
+* [33m|[m   95bf69a | M Awais Akram <awaisverse@gmail.com> | 64 seconds ago | merge: integrate backend logger utility
+[33m|[m[1;33m\[m [33m\[m  
+[33m|[m [1;33m|[m[33m/[m  
+[33m|[m[33m/[m[1;33m|[m   
+[33m|[m * 355f56c | M Awais Akram <awaisverse@gmail.com> | 3 minutes ago | feat(backend): add utility logger service
+[33m|[m[33m/[m  
+* 6c2202f | M Awais Akram <awaisverse@gmail.com> | 7 minutes ago | feat: initial project setup

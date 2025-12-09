@@ -49,6 +49,9 @@ export interface Location {
   address?: string;
 }
 
+// Re-export driver types for convenience
+export type { Driver, Vehicle, DriverStats, RideRequest as DriverRideRequest, ActiveRide } from './driver';
+
 // Ride Types
 export interface Ride {
   id: string;
