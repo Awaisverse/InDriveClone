@@ -64,3 +64,5 @@ npx expo start --clear
 **The app is ready!** Start it with `npx expo start --clear` and scan the QR code! 🎉
 
 
+
+

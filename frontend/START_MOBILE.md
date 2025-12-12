@@ -83,3 +83,5 @@ The RideShare app will load on your device!
 **Ready to go!** Start with `npx expo start --clear` and scan the QR code! 🚀
 
 
+
+
