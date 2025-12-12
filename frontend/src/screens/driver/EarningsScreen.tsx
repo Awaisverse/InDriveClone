@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import api from '../../services/api';
 
 interface EarningsData {
   today: number;
@@ -26,31 +27,74 @@ interface Trip {
 
 export default function EarningsScreen() {
   const [selectedPeriod, setSelectedPeriod] = useState<'today' | 'week' | 'month'>('today');
-  const [earnings] = useState<EarningsData>({
-    today: 125.50,
-    week: 850.75,
-    month: 3200.00,
-    total: 12500.00,
+  const [earnings, setEarnings] = useState<EarningsData>({
+    today: 0,
+    week: 0,
+    month: 0,
+    total: 0,
   });
+  const [trips, setTrips] = useState<Trip[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const [trips] = useState<Trip[]>([
-    {
-      id: '1',
-      date: '2024-01-15',
-      fare: 18.50,
-      distance: 6.2,
-      passengerName: 'John Doe',
-      rating: 5,
-    },
-    {
-      id: '2',
-      date: '2024-01-15',
-      fare: 22.00,
-      distance: 8.5,
-      passengerName: 'Jane Smith',
-      rating: 4,
-    },
-  ]);
+  useEffect(() => {
+    loadEarnings();
+  }, [selectedPeriod]);
+
+  const loadEarnings = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get('/rides/driver/history?limit=100');
+      if (response.data.success) {
+        const rides = response.data.rides || [];
+        
+        // Calculate earnings by period
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+        const monthAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+        const completedRides = rides.filter((r: any) => r.status === 'completed');
+        
+        const todayEarnings = completedRides
+          .filter((r: any) => new Date(r.completedAt) >= today)
+          .reduce((sum: number, r: any) => sum + (r.driverEarnings || 0), 0);
+        
+        const weekEarnings = completedRides
+          .filter((r: any) => new Date(r.completedAt) >= weekAgo)
+          .reduce((sum: number, r: any) => sum + (r.driverEarnings || 0), 0);
+        
+        const monthEarnings = completedRides
+          .filter((r: any) => new Date(r.completedAt) >= monthAgo)
+          .reduce((sum: number, r: any) => sum + (r.driverEarnings || 0), 0);
+        
+        const totalEarnings = completedRides
+          .reduce((sum: number, r: any) => sum + (r.driverEarnings || 0), 0);
+
+        setEarnings({
+          today: todayEarnings,
+          week: weekEarnings,
+          month: monthEarnings,
+          total: totalEarnings,
+        });
+
+        // Format trips for display
+        const formattedTrips: Trip[] = completedRides.slice(0, 10).map((ride: any) => ({
+          id: ride.id,
+          date: new Date(ride.completedAt).toLocaleDateString(),
+          fare: ride.driverEarnings || 0,
+          distance: ride.actualDistance || ride.estimatedDistance || 0,
+          passengerName: 'Passenger', // TODO: Get rider name from ride
+          rating: ride.driverRating || 0,
+        }));
+
+        setTrips(formattedTrips);
+      }
+    } catch (error: any) {
+      console.error('Error loading earnings:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getEarnings = () => {
     switch (selectedPeriod) {
@@ -114,7 +158,7 @@ export default function EarningsScreen() {
           </View>
           <View style={styles.statCard}>
             <Text style={styles.statValue}>
-              ${(getEarnings() / trips.length).toFixed(2)}
+              ${trips.length > 0 ? (getEarnings() / trips.length).toFixed(2) : '0.00'}
             </Text>
             <Text style={styles.statLabel}>Avg. per Trip</Text>
           </View>
@@ -278,6 +322,18 @@ const styles = StyleSheet.create({
     color: '#666',
   },
 });
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

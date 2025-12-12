@@ -1,5 +1,14 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Alert, KeyboardAvoidingView, Platform, ScrollView, TouchableOpacity } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  TouchableOpacity,
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types';
@@ -7,7 +16,10 @@ import { Button, Input } from '../components';
 import { useAuth } from '../hooks/useAuth';
 import { validateRegisterForm } from '../utils/validation';
 
-type RegisterScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Register'>;
+type RegisterScreenNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  'Register'
+>;
 
 export default function RegisterScreen() {
   const navigation = useNavigation<RegisterScreenNavigationProp>();
@@ -17,7 +29,6 @@ export default function RegisterScreen() {
     email: '',
     password: '',
     phone: '',
-    role: 'rider' as 'rider' | 'driver',
   });
 
   const handleRegister = async () => {
@@ -34,12 +45,28 @@ export default function RegisterScreen() {
     }
 
     try {
-      await register(formData);
-      Alert.alert('Success', 'Account created successfully!', [
-        { text: 'OK', onPress: () => navigation.navigate('Home') },
-      ]);
+      // Register as rider by default (no role selection needed)
+      await register({
+        ...formData,
+        role: 'rider', // Always register as rider
+      });
+
+      // Success - redirect to login screen
+      Alert.alert(
+        'Success',
+        'Account created successfully! Please sign in to continue.',
+        [
+          {
+            text: 'OK',
+            onPress: () => navigation.navigate('Login' as never),
+          },
+        ]
+      );
     } catch (err: any) {
-      Alert.alert('Registration Failed', err.response?.data?.message || 'Something went wrong');
+      Alert.alert(
+        'Registration Failed',
+        err.response?.data?.message || 'Something went wrong. Please try again.'
+      );
     }
   };
 
@@ -51,84 +78,98 @@ export default function RegisterScreen() {
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
       >
         <View style={styles.content}>
-          <Text style={styles.title}>Create Account</Text>
-          <Text style={styles.subtitle}>Join RideShare today</Text>
+          {/* Header */}
+          <View style={styles.header}>
+            <Text style={styles.title}>Create Account</Text>
+            <Text style={styles.subtitle}>Start booking rides today</Text>
+          </View>
 
+          {/* Form */}
           <View style={styles.form}>
             <Input
               label="Full Name"
               placeholder="Enter your full name"
               value={formData.name}
-              onChangeText={(text) => setFormData({ ...formData, name: text })}
+              onChangeText={text => setFormData({ ...formData, name: text })}
               autoCapitalize="words"
+              autoComplete="name"
             />
 
             <Input
-              label="Email"
+              label="Email Address"
               placeholder="Enter your email"
               value={formData.email}
-              onChangeText={(text) => setFormData({ ...formData, email: text })}
+              onChangeText={text => setFormData({ ...formData, email: text })}
               keyboardType="email-address"
               autoCapitalize="none"
               autoComplete="email"
             />
 
             <Input
-              label="Phone"
+              label="Phone Number"
               placeholder="Enter your phone number"
               value={formData.phone}
-              onChangeText={(text) => setFormData({ ...formData, phone: text })}
+              onChangeText={text => setFormData({ ...formData, phone: text })}
               keyboardType="phone-pad"
+              autoComplete="tel"
             />
 
             <Input
               label="Password"
-              placeholder="Enter your password"
+              placeholder="Create a password (min. 6 characters)"
               value={formData.password}
-              onChangeText={(text) => setFormData({ ...formData, password: text })}
+              onChangeText={text =>
+                setFormData({ ...formData, password: text })
+              }
               secureTextEntry
-              autoComplete="password"
+              autoComplete="password-new"
             />
 
-            <View style={styles.roleContainer}>
-              <Text style={styles.roleLabel}>I want to:</Text>
-              <View style={styles.roleButtons}>
-                <TouchableOpacity
-                  style={[styles.roleButton, formData.role === 'rider' && styles.roleButtonActive]}
-                  onPress={() => setFormData({ ...formData, role: 'rider' })}
-                >
-                  <Text style={[styles.roleButtonText, formData.role === 'rider' && styles.roleButtonTextActive]}>
-                    Ride
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.roleButton, formData.role === 'driver' && styles.roleButtonActive]}
-                  onPress={() => setFormData({ ...formData, role: 'driver' })}
-                >
-                  <Text style={[styles.roleButtonText, formData.role === 'driver' && styles.roleButtonTextActive]}>
-                    Drive
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </View>
+            <Text style={styles.infoText}>
+              By signing up, you agree to our Terms of Service and Privacy
+              Policy
+            </Text>
 
             <Button
               title="Create Account"
               onPress={handleRegister}
               loading={isLoading}
-              disabled={isLoading}
+              disabled={
+                isLoading ||
+                !formData.name ||
+                !formData.email ||
+                !formData.phone ||
+                !formData.password
+              }
             />
+
+            <View style={styles.divider}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>OR</Text>
+              <View style={styles.dividerLine} />
+            </View>
 
             <TouchableOpacity
               style={styles.loginLink}
-              onPress={() => navigation.navigate('Login')}
+              onPress={() => navigation.navigate('Login' as never)}
             >
               <Text style={styles.loginLinkText}>
-                Already have an account? <Text style={styles.loginLinkBold}>Login</Text>
+                Already have an account?{' '}
+                <Text style={styles.loginLinkBold}>Sign In</Text>
               </Text>
             </TouchableOpacity>
+          </View>
+
+          {/* Driver Option */}
+          <View style={styles.driverOption}>
+            <Text style={styles.driverOptionText}>Want to drive?</Text>
+            <Text style={styles.driverOptionSubtext}>
+              You can switch to driver mode after registration from your profile
+              settings.
+            </Text>
           </View>
         </View>
       </ScrollView>
@@ -143,64 +184,55 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    justifyContent: 'center',
+    paddingVertical: 20,
   },
   content: {
     padding: 20,
+  },
+  header: {
+    marginBottom: 30,
+    alignItems: 'center',
   },
   title: {
     fontSize: 32,
     fontWeight: 'bold',
     textAlign: 'center',
-    marginBottom: 10,
+    marginBottom: 8,
     color: '#000',
   },
   subtitle: {
-    fontSize: 18,
+    fontSize: 16,
     textAlign: 'center',
-    marginBottom: 40,
     color: '#666',
   },
   form: {
     width: '100%',
   },
-  roleContainer: {
+  infoText: {
+    fontSize: 12,
+    color: '#999',
+    textAlign: 'center',
     marginBottom: 20,
+    lineHeight: 18,
   },
-  roleLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 10,
-    color: '#333',
-  },
-  roleButtons: {
+  divider: {
     flexDirection: 'row',
-    gap: 10,
-  },
-  roleButton: {
-    flex: 1,
-    padding: 15,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#ddd',
     alignItems: 'center',
-    backgroundColor: '#f5f5f5',
+    marginVertical: 20,
   },
-  roleButtonActive: {
-    borderColor: '#007AFF',
-    backgroundColor: '#E3F2FD',
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#e0e0e0',
   },
-  roleButtonText: {
-    fontSize: 16,
-    color: '#666',
-    fontWeight: '600',
-  },
-  roleButtonTextActive: {
-    color: '#007AFF',
+  dividerText: {
+    marginHorizontal: 15,
+    fontSize: 14,
+    color: '#999',
   },
   loginLink: {
-    marginTop: 20,
     alignItems: 'center',
+    paddingVertical: 10,
   },
   loginLinkText: {
     fontSize: 14,
@@ -210,10 +242,22 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#007AFF',
   },
+  driverOption: {
+    marginTop: 20,
+    padding: 15,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  driverOptionText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 4,
+  },
+  driverOptionSubtext: {
+    fontSize: 12,
+    color: '#666',
+    textAlign: 'center',
+  },
 });
-
-
-
-
-
-

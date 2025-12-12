@@ -10,6 +10,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '../../components';
 import { Ride, Location } from '../../types';
+import api from '../../services/api';
 
 interface ActiveRide extends Ride {
   passengerName: string;
@@ -23,30 +24,51 @@ interface ActiveRide extends Ride {
 export default function ActiveRideScreen({ route }: any) {
   const [activeRide, setActiveRide] = useState<ActiveRide | null>(null);
   const [rideStatus, setRideStatus] = useState<'picking-up' | 'in-progress' | 'arrived'>('picking-up');
+  const [loading, setLoading] = useState(true);
 
-  // Mock data - replace with route params or API call
   useEffect(() => {
-    const mockRide: ActiveRide = {
-      id: '1',
-      riderId: 'r1',
-      passengerName: 'John Doe',
-      passengerPhone: '+1234567890',
-      passengerRating: 4.8,
-      pickupAddress: '123 Main Street, Downtown',
-      dropoffAddress: '456 Park Avenue, Uptown',
-      pickupLocation: { latitude: 40.7128, longitude: -74.0060 },
-      dropoffLocation: { latitude: 40.7589, longitude: -73.9851 },
-      status: 'in-progress',
-      fare: 15.50,
-      distance: 5.2,
-      currentStatus: 'picking-up',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    setActiveRide(mockRide);
+    loadActiveRide();
   }, []);
 
-  const handleArrived = () => {
+  const loadActiveRide = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get('/rides/driver/active');
+      if (response.data.success && response.data.ride) {
+        const ride = response.data.ride;
+        setActiveRide({
+          id: ride.id,
+          riderId: ride.riderId,
+          passengerName: ride.rider?.name || 'Passenger',
+          passengerPhone: ride.rider?.phone || '',
+          passengerRating: ride.rider?.rating || 0,
+          pickupAddress: ride.pickupLocation?.address || 'Pickup location',
+          dropoffAddress: ride.dropoffLocation?.address || 'Dropoff location',
+          pickupLocation: ride.pickupLocation,
+          dropoffLocation: ride.dropoffLocation,
+          status: ride.status,
+          fare: ride.totalFare,
+          distance: ride.estimatedDistance || 0,
+          currentStatus: ride.status === 'accepted' ? 'picking-up' : ride.status === 'driver_arriving' ? 'arrived' : 'in-progress',
+          createdAt: ride.createdAt,
+          updatedAt: ride.updatedAt,
+        });
+        // Set ride status based on ride status
+        if (ride.status === 'accepted') setRideStatus('picking-up');
+        else if (ride.status === 'driver_arriving') setRideStatus('arrived');
+        else if (ride.status === 'in_progress') setRideStatus('in-progress');
+      }
+    } catch (error: any) {
+      // No active ride - this is okay
+      setActiveRide(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleArrived = async () => {
+    if (!activeRide) return;
+    
     Alert.alert(
       'Arrived at Pickup?',
       'Confirm that you have arrived at the pickup location.',
@@ -54,16 +76,25 @@ export default function ActiveRideScreen({ route }: any) {
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Confirm',
-          onPress: () => {
-            setRideStatus('arrived');
-            // TODO: API call to update ride status
+          onPress: async () => {
+            try {
+              await api.put(`/rides/${activeRide.id}/status`, {
+                status: 'driver_arriving',
+              });
+              setRideStatus('arrived');
+              await loadActiveRide();
+            } catch (error: any) {
+              Alert.alert('Error', error.response?.data?.message || 'Failed to update ride status');
+            }
           },
         },
       ]
     );
   };
 
-  const handleStartRide = () => {
+  const handleStartRide = async () => {
+    if (!activeRide) return;
+    
     Alert.alert(
       'Start Ride?',
       'The passenger is in the vehicle. Start the trip.',
@@ -71,16 +102,25 @@ export default function ActiveRideScreen({ route }: any) {
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Start Ride',
-          onPress: () => {
-            setRideStatus('in-progress');
-            // TODO: API call to start ride
+          onPress: async () => {
+            try {
+              await api.put(`/rides/${activeRide.id}/status`, {
+                status: 'in_progress',
+              });
+              setRideStatus('in-progress');
+              await loadActiveRide();
+            } catch (error: any) {
+              Alert.alert('Error', error.response?.data?.message || 'Failed to start ride');
+            }
           },
         },
       ]
     );
   };
 
-  const handleCompleteRide = () => {
+  const handleCompleteRide = async () => {
+    if (!activeRide) return;
+    
     Alert.alert(
       'Complete Ride?',
       'Confirm that the passenger has reached their destination.',
@@ -88,20 +128,39 @@ export default function ActiveRideScreen({ route }: any) {
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Complete',
-          onPress: () => {
-            // TODO: API call to complete ride
-            Alert.alert('Success', 'Ride completed! Fare: $15.50');
+          onPress: async () => {
+            try {
+              await api.post(`/rides/${activeRide.id}/complete`, {
+                actualDistance: activeRide.distance,
+                actualDuration: 15, // TODO: Calculate actual duration
+              });
+              Alert.alert('Success', `Ride completed! Fare: $${activeRide.fare.toFixed(2)}`);
+              await loadActiveRide(); // Will return null, showing empty state
+            } catch (error: any) {
+              Alert.alert('Error', error.response?.data?.message || 'Failed to complete ride');
+            }
           },
         },
       ]
     );
   };
 
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>Loading...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   if (!activeRide) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyText}>No active ride</Text>
+          <Text style={styles.emptySubtext}>Accept a ride request to get started</Text>
         </View>
       </SafeAreaView>
     );
@@ -390,6 +449,11 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 18,
     color: '#666',
+    marginBottom: 10,
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: '#999',
   },
 });
 

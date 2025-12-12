@@ -29,5 +29,5 @@ export const APP_CONSTANTS = {
 export const STORAGE_KEYS = {
   AUTH_TOKEN: '@rideshare:auth_token',
   USER_DATA: '@rideshare:user_data',
+  CURRENT_MODE: '@rideshare:current_mode',
 } as const;
-

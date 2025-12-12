@@ -1,15 +1,21 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Alert, KeyboardAvoidingView, Platform, ScrollView, TouchableOpacity } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  TouchableOpacity,
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types';
 import { Button, Input } from '../components';
 import { useAuth } from '../hooks/useAuth';
 
-type LoginScreenNavigationProp = NativeStackNavigationProp<
-  RootStackParamList,
-  'Login'
->;
+type LoginScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Login'>;
 
 export default function LoginScreen() {
   const navigation = useNavigation<LoginScreenNavigationProp>();
@@ -19,15 +25,18 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert('Error', 'Please enter email and password');
+      Alert.alert('Error', 'Please enter both email and password');
       return;
     }
 
     try {
       await login({ email, password });
-      navigation.navigate('Home');
+      // Navigation will be handled by auth state
     } catch (err: any) {
-      Alert.alert('Login Failed', err.response?.data?.message || 'Invalid credentials');
+      Alert.alert(
+        'Login Failed',
+        err.response?.data?.message || 'Invalid email or password. Please try again.'
+      );
     }
   };
 
@@ -39,14 +48,19 @@ export default function LoginScreen() {
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
       >
         <View style={styles.content}>
-          <Text style={styles.title}>RideShare</Text>
-          <Text style={styles.subtitle}>Welcome back!</Text>
+          {/* Header */}
+          <View style={styles.header}>
+            <Text style={styles.title}>Welcome Back</Text>
+            <Text style={styles.subtitle}>Sign in to continue</Text>
+          </View>
 
+          {/* Form */}
           <View style={styles.form}>
             <Input
-              label="Email"
+              label="Email Address"
               placeholder="Enter your email"
               value={email}
               onChangeText={setEmail}
@@ -65,16 +79,26 @@ export default function LoginScreen() {
               autoComplete="password"
             />
 
+            <TouchableOpacity style={styles.forgotPassword}>
+              <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+            </TouchableOpacity>
+
             <Button
-              title="Login"
+              title="Sign In"
               onPress={handleLogin}
               loading={isLoading}
-              disabled={isLoading}
+              disabled={isLoading || !email || !password}
             />
+
+            <View style={styles.divider}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>OR</Text>
+              <View style={styles.dividerLine} />
+            </View>
 
             <TouchableOpacity
               style={styles.registerLink}
-              onPress={() => navigation.navigate('Register')}
+              onPress={() => navigation.navigate('Register' as never)}
             >
               <Text style={styles.registerLinkText}>
                 Don't have an account? <Text style={styles.registerLinkBold}>Sign Up</Text>
@@ -95,29 +119,58 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     justifyContent: 'center',
+    paddingVertical: 20,
   },
   content: {
     padding: 20,
+  },
+  header: {
+    marginBottom: 40,
+    alignItems: 'center',
   },
   title: {
     fontSize: 32,
     fontWeight: 'bold',
     textAlign: 'center',
-    marginBottom: 10,
+    marginBottom: 8,
     color: '#000',
   },
   subtitle: {
-    fontSize: 18,
+    fontSize: 16,
     textAlign: 'center',
-    marginBottom: 40,
     color: '#666',
   },
   form: {
     width: '100%',
   },
-  registerLink: {
-    marginTop: 20,
+  forgotPassword: {
+    alignSelf: 'flex-end',
+    marginBottom: 20,
+    marginTop: -10,
+  },
+  forgotPasswordText: {
+    fontSize: 14,
+    color: '#007AFF',
+    fontWeight: '500',
+  },
+  divider: {
+    flexDirection: 'row',
     alignItems: 'center',
+    marginVertical: 20,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#e0e0e0',
+  },
+  dividerText: {
+    marginHorizontal: 15,
+    fontSize: 14,
+    color: '#999',
+  },
+  registerLink: {
+    alignItems: 'center',
+    paddingVertical: 10,
   },
   registerLinkText: {
     fontSize: 14,
@@ -128,4 +181,3 @@ const styles = StyleSheet.create({
     color: '#007AFF',
   },
 });
-

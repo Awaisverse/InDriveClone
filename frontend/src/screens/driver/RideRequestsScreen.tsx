@@ -11,6 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '../../components';
 import { Ride } from '../../types';
+import api from '../../services/api';
 
 interface RideRequest extends Ride {
   passengerName: string;
@@ -26,37 +27,45 @@ export default function RideRequestsScreen() {
   const [rideRequests, setRideRequests] = useState<RideRequest[]>([]);
   const [refreshing, setRefreshing] = useState(false);
 
-  // Mock data - replace with API call
   useEffect(() => {
     loadRideRequests();
   }, []);
 
-  const loadRideRequests = () => {
-    // TODO: Replace with actual API call
-    const mockRequests: RideRequest[] = [
-      {
-        id: '1',
-        riderId: 'r1',
-        passengerName: 'John Doe',
-        passengerRating: 4.8,
-        estimatedFare: 15.50,
-        estimatedDistance: '5.2 km',
-        estimatedTime: '12 min',
-        pickupAddress: '123 Main Street, Downtown',
-        dropoffAddress: '456 Park Avenue, Uptown',
-        pickupLocation: { latitude: 40.7128, longitude: -74.0060 },
-        dropoffLocation: { latitude: 40.7589, longitude: -73.9851 },
-        status: 'pending',
-        fare: 15.50,
-        distance: 5.2,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      },
-    ];
-    setRideRequests(mockRequests);
+  const loadRideRequests = async () => {
+    try {
+      setRefreshing(true);
+      const response = await api.get('/rides/driver/requests');
+      if (response.data.success) {
+        const rides = response.data.rides || [];
+        const formattedRequests: RideRequest[] = rides.map((ride: any) => ({
+          id: ride.id,
+          riderId: ride.riderId,
+          passengerName: ride.rider?.name || 'Passenger',
+          passengerRating: ride.rider?.rating || 0,
+          estimatedFare: ride.totalFare || 0,
+          estimatedDistance: ride.estimatedDistance ? `${ride.estimatedDistance.toFixed(1)} km` : 'N/A',
+          estimatedTime: ride.estimatedDuration ? `${ride.estimatedDuration} min` : 'N/A',
+          pickupAddress: ride.pickupLocation?.address || 'Pickup location',
+          dropoffAddress: ride.dropoffLocation?.address || 'Dropoff location',
+          pickupLocation: ride.pickupLocation,
+          dropoffLocation: ride.dropoffLocation,
+          status: ride.status,
+          fare: ride.totalFare || 0,
+          distance: ride.estimatedDistance || 0,
+          createdAt: ride.createdAt,
+          updatedAt: ride.updatedAt,
+        }));
+        setRideRequests(formattedRequests);
+      }
+    } catch (error: any) {
+      console.error('Error loading ride requests:', error);
+      setRideRequests([]);
+    } finally {
+      setRefreshing(false);
+    }
   };
 
-  const handleAccept = (rideId: string) => {
+  const handleAccept = async (rideId: string) => {
     Alert.alert(
       'Accept Ride?',
       'You will be assigned to this ride request.',
@@ -64,17 +73,21 @@ export default function RideRequestsScreen() {
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Accept',
-          onPress: () => {
-            // TODO: API call to accept ride
-            setRideRequests(prev => prev.filter(r => r.id !== rideId));
-            Alert.alert('Success', 'Ride accepted! Navigate to pickup location.');
+          onPress: async () => {
+            try {
+              await api.post(`/rides/${rideId}/accept`);
+              setRideRequests(prev => prev.filter(r => r.id !== rideId));
+              Alert.alert('Success', 'Ride accepted! Navigate to pickup location.');
+            } catch (error: any) {
+              Alert.alert('Error', error.response?.data?.message || 'Failed to accept ride');
+            }
           },
         },
       ]
     );
   };
 
-  const handleDecline = (rideId: string) => {
+  const handleDecline = async (rideId: string) => {
     Alert.alert(
       'Decline Ride?',
       'This ride request will be declined.',
@@ -83,9 +96,15 @@ export default function RideRequestsScreen() {
         {
           text: 'Decline',
           style: 'destructive',
-          onPress: () => {
-            // TODO: API call to decline ride
-            setRideRequests(prev => prev.filter(r => r.id !== rideId));
+          onPress: async () => {
+            try {
+              await api.post(`/rides/${rideId}/cancel`, {
+                reason: 'Driver declined',
+              });
+              setRideRequests(prev => prev.filter(r => r.id !== rideId));
+            } catch (error: any) {
+              Alert.alert('Error', error.response?.data?.message || 'Failed to decline ride');
+            }
           },
         },
       ]
@@ -395,6 +414,18 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 });
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

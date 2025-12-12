@@ -1,6 +1,5 @@
 import React from 'react';
 import { Text } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import DriverHomeScreen from '../screens/driver/DriverHomeScreen';
 import RideRequestsScreen from '../screens/driver/RideRequestsScreen';
@@ -8,13 +7,14 @@ import ActiveRideScreen from '../screens/driver/ActiveRideScreen';
 import EarningsScreen from '../screens/driver/EarningsScreen';
 import DriverProfileScreen from '../screens/driver/DriverProfileScreen';
 import TripHistoryScreen from '../screens/driver/TripHistoryScreen';
+import AnalyticsScreen from '../screens/driver/AnalyticsScreen';
+import SettingsScreen from '../screens/driver/SettingsScreen';
 
 const Tab = createBottomTabNavigator();
 
 export default function DriverNavigation() {
   return (
-    <NavigationContainer>
-      <Tab.Navigator
+    <Tab.Navigator
         screenOptions={{
           headerShown: false,
           tabBarActiveTintColor: '#007AFF',
@@ -60,6 +60,14 @@ export default function DriverNavigation() {
           }}
         />
         <Tab.Screen
+          name="History"
+          component={TripHistoryScreen}
+          options={{
+            tabBarIcon: ({ color }) => <Text style={{ fontSize: 24 }}>📋</Text>,
+            tabBarLabel: 'History',
+          }}
+        />
+        <Tab.Screen
           name="Profile"
           component={DriverProfileScreen}
           options={{
@@ -68,7 +76,6 @@ export default function DriverNavigation() {
           }}
         />
       </Tab.Navigator>
-    </NavigationContainer>
   );
 }
 

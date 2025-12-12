@@ -3,7 +3,8 @@
     "name": "RideShare",
     "slug": "rideshare",
     "version": "1.0.0",
-    "sdkVersion": "52.0.0",
+    "sdkVersion": "54.0.0",
+    "newArchEnabled": true,
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -12,9 +13,7 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.rideshare.app"
@@ -25,10 +24,7 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.rideshare.app",
-      "permissions": [
-        "ACCESS_FINE_LOCATION",
-        "ACCESS_COARSE_LOCATION"
-      ]
+      "permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -39,9 +35,8 @@
         {
           "locationAlwaysAndWhenInUsePermission": "Allow RideShare to use your location."
         }
-      ]
+      ],
+      "expo-font"
     ]
   }
 }
-
-

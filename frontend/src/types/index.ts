@@ -6,6 +6,7 @@ export interface User {
   phone: string;
   role: 'rider' | 'driver';
   isVerified: boolean;
+  avatar?: string;
 }
 
 // Auth Types
@@ -25,7 +26,7 @@ export interface RegisterData {
   email: string;
   password: string;
   phone: string;
-  role: 'rider' | 'driver';
+  role?: 'rider' | 'driver'; // Optional - defaults to 'rider' in backend
 }
 
 // Navigation Types
@@ -34,6 +35,8 @@ export type RootStackParamList = {
   Home: undefined;
   Register: undefined;
   Profile: undefined;
+  RiderHome: undefined;
+  DriverHome: undefined;
 };
 
 // API Types
@@ -52,6 +55,23 @@ export interface Location {
 // Re-export driver types for convenience
 export type { Driver, Vehicle, DriverStats, RideRequest as DriverRideRequest, ActiveRide } from './driver';
 
+// Re-export rider types
+export type {
+  RideRequest,
+  ActiveRide as RiderActiveRide,
+  RideHistory,
+  PaymentMethod,
+  SavedLocation,
+  RideEstimate,
+  RideStatus,
+  VehicleType,
+  PaymentMethodType,
+  DriverInfo,
+  VehicleInfo,
+  RiderProfile,
+  RideTracking,
+} from './rider';
+
 // Ride Types
 export interface Ride {
   id: string;
@@ -65,6 +85,3 @@ export interface Ride {
   createdAt: string;
   updatedAt: string;
 }
-
-
-

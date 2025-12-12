@@ -5,15 +5,22 @@ import { LoginCredentials, RegisterData, AuthResponse } from '../types';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 export const useAuth = () => {
-  const { login: loginStore, logout: logoutStore, user, isAuthenticated } = useAuthStore();
+  const {
+    login: loginStore,
+    logout: logoutStore,
+    user,
+    isAuthenticated,
+  } = useAuthStore();
   const queryClient = useQueryClient();
 
   const loginMutation = useMutation({
-    mutationFn: async (credentials: LoginCredentials): Promise<AuthResponse> => {
+    mutationFn: async (
+      credentials: LoginCredentials
+    ): Promise<AuthResponse> => {
       const response = await api.post<AuthResponse>('/auth/login', credentials);
       return response.data;
     },
-    onSuccess: (data) => {
+    onSuccess: data => {
       loginStore(data.user, data.token);
       queryClient.setQueryData(['user'], data.user);
     },
@@ -24,9 +31,10 @@ export const useAuth = () => {
       const response = await api.post<AuthResponse>('/auth/register', data);
       return response.data;
     },
-    onSuccess: (data) => {
-      loginStore(data.user, data.token);
-      queryClient.setQueryData(['user'], data.user);
+    onSuccess: data => {
+      // Don't auto-login after registration - user must sign in manually
+      // Just clear any existing data
+      queryClient.setQueryData(['user'], null);
     },
   });
 
@@ -59,9 +67,3 @@ export const useAuth = () => {
     error: loginMutation.error || registerMutation.error,
   };
 };
-
-
-
-
-
-

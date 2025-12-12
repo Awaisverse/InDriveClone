@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import api from '../../services/api';
 
 interface Trip {
   id: string;
@@ -24,35 +25,61 @@ interface Trip {
 
 export default function TripHistoryScreen() {
   const [selectedFilter, setSelectedFilter] = useState<'all' | 'today' | 'week' | 'month'>('all');
-  
-  const trips: Trip[] = [
-    {
-      id: '1',
-      date: '2024-01-15',
-      time: '10:30 AM',
-      passengerName: 'John Doe',
-      pickupAddress: '123 Main St',
-      dropoffAddress: '456 Park Ave',
-      fare: 18.50,
-      distance: 6.2,
-      duration: 15,
-      rating: 5,
-      status: 'completed',
-    },
-    {
-      id: '2',
-      date: '2024-01-15',
-      time: '2:15 PM',
-      passengerName: 'Jane Smith',
-      pickupAddress: '789 Oak St',
-      dropoffAddress: '321 Elm St',
-      fare: 22.00,
-      distance: 8.5,
-      duration: 20,
-      rating: 4,
-      status: 'completed',
-    },
-  ];
+  const [trips, setTrips] = useState<Trip[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadTripHistory();
+  }, [selectedFilter]);
+
+  const loadTripHistory = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get('/rides/driver/history?limit=100');
+      if (response.data.success) {
+        const rides = response.data.rides || [];
+        
+        // Filter by selected period
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+        const monthAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+        let filteredRides = rides;
+        if (selectedFilter === 'today') {
+          filteredRides = rides.filter((r: any) => new Date(r.completedAt || r.createdAt) >= today);
+        } else if (selectedFilter === 'week') {
+          filteredRides = rides.filter((r: any) => new Date(r.completedAt || r.createdAt) >= weekAgo);
+        } else if (selectedFilter === 'month') {
+          filteredRides = rides.filter((r: any) => new Date(r.completedAt || r.createdAt) >= monthAgo);
+        }
+
+        const formattedTrips: Trip[] = filteredRides.map((ride: any) => {
+          const rideDate = new Date(ride.completedAt || ride.createdAt);
+          return {
+            id: ride.id,
+            date: rideDate.toLocaleDateString(),
+            time: rideDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            passengerName: 'Passenger', // TODO: Get rider name
+            pickupAddress: ride.pickupLocation?.address || 'Pickup location',
+            dropoffAddress: ride.dropoffLocation?.address || 'Dropoff location',
+            fare: ride.driverEarnings || ride.totalFare || 0,
+            distance: ride.actualDistance || ride.estimatedDistance || 0,
+            duration: ride.actualDuration || ride.estimatedDuration || 0,
+            rating: ride.driverRating || 0,
+            status: ride.status === 'completed' ? 'completed' : 'cancelled',
+          };
+        });
+
+        setTrips(formattedTrips);
+      }
+    } catch (error: any) {
+      console.error('Error loading trip history:', error);
+      setTrips([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const renderTrip = ({ item }: { item: Trip }) => (
     <TouchableOpacity style={styles.tripCard}>
@@ -125,17 +152,23 @@ export default function TripHistoryScreen() {
         ))}
       </View>
 
-      <FlatList
-        data={trips}
-        renderItem={renderTrip}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContent}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No trips found</Text>
-          </View>
-        }
-      />
+      {loading ? (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>Loading...</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={trips}
+          renderItem={renderTrip}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.listContent}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>No trips found</Text>
+            </View>
+          }
+        />
+      )}
     </SafeAreaView>
   );
 }
@@ -316,6 +349,18 @@ const styles = StyleSheet.create({
     color: '#666',
   },
 });
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
